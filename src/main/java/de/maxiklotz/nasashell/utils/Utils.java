@@ -1,4 +1,4 @@
-package de.maxiklotz.nasashell;
+package de.maxiklotz.nasashell.utils;
 
 import org.springframework.stereotype.Component;
 

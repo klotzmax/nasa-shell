@@ -1,7 +1,7 @@
 package de.maxiklotz.nasashell.commands;
 
 
-import de.maxiklotz.nasashell.Utils;
+import de.maxiklotz.nasashell.utils.Utils;
 import de.maxiklotz.nasashell.dto.ImageMetadata;
 import de.maxiklotz.nasashell.dto.NasaDate;
 import lombok.extern.slf4j.Slf4j;
