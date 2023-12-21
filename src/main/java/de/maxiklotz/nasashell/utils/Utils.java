@@ -1,19 +1,24 @@
 package de.maxiklotz.nasashell.utils;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.time.LocalDate;
 
 @Component
+@Slf4j
+@AllArgsConstructor
 public class Utils {
 
-    public void checkDateFormat(String date) {
-        String regEx = "[0-9]{4}-[0-9]{2}-[0-9]{2}";
-        final Pattern pattern = Pattern.compile(regEx);
-        final Matcher matcher = pattern.matcher(date);
-        if(!matcher.matches()){
-            throw new IllegalArgumentException("Given date does not match regex: " + regEx);
+    private ObjectMapper objectMapper;
+
+    public void checkDateFormatOrThrow(String date) throws IllegalArgumentException {
+        if(!StringUtils.hasText(date)){
+            throw new IllegalArgumentException("Date mustn't be null or empty");
         }
+            objectMapper.convertValue(date, LocalDate.class);
     }
 }

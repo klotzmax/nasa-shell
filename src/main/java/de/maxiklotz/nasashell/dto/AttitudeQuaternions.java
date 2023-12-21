@@ -1,12 +1,9 @@
 package de.maxiklotz.nasashell.dto;
 
-import lombok.*;
 
-@Setter
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-@ToString
+import lombok.Data;
+
+@Data
 public class AttitudeQuaternions {
 
     private double q0;

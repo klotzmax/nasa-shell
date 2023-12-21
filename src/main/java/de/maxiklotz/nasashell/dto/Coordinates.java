@@ -1,5 +1,8 @@
 package de.maxiklotz.nasashell.dto;
 
+import lombok.Data;
+
+@Data
 public class Coordinates {
 
     private double x;

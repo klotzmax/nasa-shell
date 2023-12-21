@@ -11,13 +11,18 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
 import org.springframework.shell.standard.ShellOption;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientResponseException;
 
-import java.io.*;
+
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @ShellComponent
 @Slf4j
@@ -32,14 +37,14 @@ public class NasaEpicImageDownload {
     @ShellMethod(key = "download-images")
     public void downloadImages(@ShellOption(value = "--date", defaultValue = "") String date,
                                @ShellOption(value = "--targetFolder") String targetFolder) {
-        if(apiKey == null || apiKey.isEmpty()){
+        if(!StringUtils.hasText(apiKey)){
             throw new IllegalArgumentException("API-Key not specified!");
         }
         try{
             if(date.isEmpty()){
                 date = getLatestAvailableDate();
             } else {
-                utils.checkDateFormat(date);
+                utils.checkDateFormatOrThrow(date);
             }
             String folderToSavePicturesIn = createTargetFolder(targetFolder, date);
             List<ImageMetadata> imageDataByDate = getImageDataByDate(date);
@@ -48,7 +53,9 @@ public class NasaEpicImageDownload {
             }
             log.info("Downloaded images to folder: " + folderToSavePicturesIn);
         } catch (IOException ex){
-            log.error("Could save picture");
+            log.error("Could not save picture");
+        } catch (IllegalArgumentException ex){
+            log.error("Given date is not valid", ex);
         }
 
     }
@@ -65,24 +72,25 @@ public class NasaEpicImageDownload {
         String imagename = image + ".png";
         File outputFile = new File(folderToSavePicturesIn,imagename);
         if(file == null){
-            throw new RuntimeException("Did not receive picture data from api!");
+
+            throw new NoSuchElementException("Did not receive picture data from api!");
         }
         Files.write(outputFile.toPath(),file);
     }
 
 
-    private String createTargetFolder(String targetFolder, String dateFolder){
+    private String createTargetFolder(String targetFolder, String dateFolder) throws IOException {
         try{
             Path of = Path.of(targetFolder, dateFolder);
             Files.createDirectories(of);
             log.info("Created target folder: " + of.toAbsolutePath());
             return of.toString();
         } catch (IOException ex){
-            throw new RuntimeException("Unable to create target folder", ex);
+            throw new IOException("Unable to create target folder", ex);
         }
     }
 
-    private List<ImageMetadata> getImageDataByDate(String date){
+    private List<ImageMetadata> getImageDataByDate(String date) throws RestClientResponseException {
         String uri = "https://api.nasa.gov/EPIC/api/natural/date/" + date + "?api_key=" + apiKey;
         return RestClient.create()
                 .get()
@@ -91,14 +99,14 @@ public class NasaEpicImageDownload {
                 .body(new ParameterizedTypeReference<>() {});
     }
 
-    private String getLatestAvailableDate(){
+    private String getLatestAvailableDate() throws RestClientResponseException{
         List<NasaDate> dates = RestClient.create()
                 .get()
                 .uri("https://api.nasa.gov/EPIC/api/natural/all?api_key=" + apiKey)
                 .retrieve()
                 .body(new ParameterizedTypeReference<>() {});
         if(dates == null || dates.isEmpty()){
-            throw new RuntimeException("No date has been found!");
+            throw new NoSuchElementException("No date has been found!");
         }
         return dates.stream().map(NasaDate::getDate).sorted(Comparator.reverseOrder()).toList().get(0).toString();
     }

@@ -1,16 +1,11 @@
 package de.maxiklotz.nasashell.dto;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+
+import lombok.Data;
 
 import java.time.LocalDate;
 
-@NoArgsConstructor
-@Setter
-@Getter
-@ToString
+@Data
 public class NasaDate {
 
     private LocalDate date;

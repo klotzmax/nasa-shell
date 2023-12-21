@@ -1,12 +1,9 @@
 package de.maxiklotz.nasashell.dto;
 
-import lombok.*;
 
-@Setter
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-@ToString
+import lombok.Data;
+
+@Data
 public class ImageMetadata {
 
     private String image;
