@@ -31,8 +31,30 @@ public class NasaEpicImageDownload {
     @Value("${nasa.api.key}")
     private String apiKey;
 
-    @Autowired
+    @Value("${nasa.api.downloadimageurl}")
+    private String pictureDownloadUrl;
+
+    @Value("${nasa.api.imagedataurl}")
+    private String imageDataUrl;
+
+    @Value("${nasa.api.placeholder.date}")
+    private String datePlaceholder;
+
+    @Value("${nasa.api.placeholder.imagename}")
+    private String imageNamePlaceholder;
+
+    @Value("${nasa.api.placeholder.api.key}")
+    private String apiKeyPlaceHolder;
+
+    @Value("${nasa.api.availabledatesurl}")
+    private String availableDatesUrl;
+
     private Utils utils;
+
+    @Autowired
+    public void setUtils(Utils utils){
+        this.utils = utils;
+    }
 
     @ShellMethod(key = "download-images")
     public void downloadImages(@ShellOption(value = "--date", defaultValue = "") String date,
@@ -61,9 +83,8 @@ public class NasaEpicImageDownload {
     }
 
     private void downloadPicture(String folderToSavePicturesIn, String image, String date) throws IOException {
-
-        String uri = "https://api.nasa.gov/EPIC/archive/natural/" + date.replace("-","/") +
-                "/png/" + image + ".png?api_key=" + apiKey;
+        String uri= pictureDownloadUrl.replace(datePlaceholder, date.replace("-","/")).replace(imageNamePlaceholder, image)
+                .replace(apiKeyPlaceHolder, apiKey);
         byte[] file = RestClient.create()
                 .get()
                 .uri(uri)
@@ -81,17 +102,17 @@ public class NasaEpicImageDownload {
 
     private String createTargetFolder(String targetFolder, String dateFolder) throws IOException {
         try{
-            Path of = Path.of(targetFolder, dateFolder);
-            Files.createDirectories(of);
-            log.info("Created target folder: " + of.toAbsolutePath());
-            return of.toString();
+            Path pathToTargetFolder = Path.of(targetFolder, dateFolder);
+            Files.createDirectories(pathToTargetFolder);
+            log.info("Created target folder: " + pathToTargetFolder.toAbsolutePath());
+            return pathToTargetFolder.toString();
         } catch (IOException ex){
             throw new IOException("Unable to create target folder", ex);
         }
     }
 
     private List<ImageMetadata> getImageDataByDate(String date) throws RestClientResponseException {
-        String uri = "https://api.nasa.gov/EPIC/api/natural/date/" + date + "?api_key=" + apiKey;
+        String uri = imageDataUrl.replace(datePlaceholder, date).replace(apiKeyPlaceHolder, apiKey);
         return RestClient.create()
                 .get()
                 .uri(uri)
@@ -102,7 +123,7 @@ public class NasaEpicImageDownload {
     private String getLatestAvailableDate() throws RestClientResponseException{
         List<NasaDate> dates = RestClient.create()
                 .get()
-                .uri("https://api.nasa.gov/EPIC/api/natural/all?api_key=" + apiKey)
+                .uri(availableDatesUrl.replace(apiKeyPlaceHolder, apiKey))
                 .retrieve()
                 .body(new ParameterizedTypeReference<>() {});
         if(dates == null || dates.isEmpty()){
